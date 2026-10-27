@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guia de Organização Política & Mapa</title>
+    <title>Coletivo Alicerce | Organize sua Revolta</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,586 +21,416 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#1a1a1a',
-                            pink: '#ff66b2',
-                            yellow: '#f7d05c',
-                            green: '#1a4a38',
-                            purple_light: '#f9f0f5',
-                            yellow_light: '#fff9c4',
-                            pink_light: '#fce4ec',
-                            green_light: '#4caf50'
+                            dark: '#2b2d42',
+                            light: '#f8f9fa',
+                            yellow: '#ffca28',
+                            coral: '#ef476f'
                         }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Montserrat', 'sans-serif'],
+                        sans: ['Poppins', 'sans-serif'],
                         hand: ['Caveat', 'cursive']
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 25px -5px rgba(43, 45, 66, 0.1), 0 8px 10px -6px rgba(43, 45, 66, 0.1)',
                     }
                 }
             }
         }
     </script>
 
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <style>
-        /* Scrollytelling Snapping */
+        /* Scrollytelling Setup */
         html {
             scroll-behavior: smooth;
-            scroll-snap-type: y mandatory;
         }
         
-        .section-snap {
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
-        }
-
-        /* Tape Styles */
-        .tape-pink {
-            background-color: theme('colors.brand.pink');
-            color: white;
-            padding: 0.2em 0.5em;
-            border-radius: 4px;
-            display: inline-block;
-            transform: rotate(-2deg);
-        }
-        
-        .tape-yellow {
-            background-color: theme('colors.brand.yellow');
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: theme('colors.brand.light');
             color: theme('colors.brand.dark');
-            padding: 0.2em 0.5em;
-            border-radius: 4px;
-            display: inline-block;
-            transform: rotate(1deg);
+            overflow-x: hidden;
         }
 
-        .tape-green {
-            background-color: theme('colors.brand.green_light');
-            color: white;
-            padding: 0.2em 0.5em;
-            border-radius: 4px;
-            display: inline-block;
-            transform: rotate(-1deg);
+        /* Marker Highlight Effect */
+        .highlight-marker {
+            position: relative;
+            z-index: 1;
         }
-
-        /* Pin Animation */
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(3); opacity: 0; }
-        }
-
-        .pin-wrapper {
+        .highlight-marker::before {
+            content: "";
             position: absolute;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            transition: transform 0.2s;
-            z-index: 10;
-        }
-
-        .pin-wrapper:hover {
-            transform: translate(-50%, -50%) scale(1.2);
-            z-index: 20;
-        }
-
-        .pin-pulse {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: theme('colors.brand.pink');
-            border-radius: 50%;
-            animation: pulse-ring 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
             z-index: -1;
+            bottom: 2px;
+            left: -2%;
+            width: 104%;
+            height: 40%;
+            background-color: theme('colors.brand.yellow');
+            border-radius: 4px;
+            transform: rotate(-1deg);
+            transition: all 0.3s ease;
         }
 
-        .pin-core {
-            width: 16px;
-            height: 16px;
-            background-color: theme('colors.brand.yellow');
-            border: 3px solid theme('colors.brand.pink');
-            border-radius: 50%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        .highlight-coral::before {
+            background-color: theme('colors.brand.coral');
+        }
+
+        /* Hand-drawn tape effect */
+        .tape {
+            background-color: rgba(255, 202, 40, 0.8);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transform: rotate(-2deg);
+            padding: 10px 20px;
+            display: inline-block;
+            border-radius: 2px 255px 3px 25px / 255px 5px 225px 3px;
+        }
+
+        /* Animations for elements */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Map Styles */
+        .state-path {
+            fill: #e9ecef;
+            stroke: #ced4da;
+            stroke-width: 1.5px;
+            stroke-linejoin: round;
+            transition: fill 0.3s;
+        }
+        .bg-dark-map .state-path {
+            fill: #3a3d57;
+            stroke: #2b2d42;
         }
         
-        /* Map container setup */
-        .map-container {
-            position: relative;
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto;
-            aspect-ratio: 1 / 1;
-        }
-
-        /* Custom Scrollbar for the modal */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        /* Custom Scrollbar for inner elements */
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: theme('colors.brand.coral'); border-radius: 10px; }
     </style>
 </head>
-<body class="text-brand-dark overflow-x-hidden antialiased">
+<body class="antialiased">
 
-    <!-- 1. Capa -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-dark flex flex-col justify-center items-center p-6 relative">
-        <div class="max-w-4xl mx-auto text-center z-10">
-            <h1 class="font-display text-5xl md:text-7xl lg:text-8xl text-white font-black leading-tight mb-6">
-                Quer se organizar <br>
-                <span class="tape-pink mt-4">politicamente?</span>
+    <!-- Seção 1 (Início) -->
+    <section class="min-h-screen flex items-center py-20 bg-brand-dark text-brand-light relative overflow-hidden">
+        <!-- Decoração de fundo -->
+        <div class="absolute top-10 right-10 w-64 h-64 bg-brand-yellow rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        <div class="absolute bottom-10 left-10 w-72 h-72 bg-brand-coral rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        
+        <div class="max-w-5xl mx-auto w-full px-6 z-10 fade-up">
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-extrabold leading-tight mb-6">
+                A campanha acabou, <br>
+                <span class="text-brand-yellow">mas a luta não.</span>
             </h1>
-            <p class="text-xl md:text-3xl text-gray-300 font-semibold mb-10">
-                Filiação partidária é só <span class="text-brand-yellow underline decoration-wavy">uma das possibilidades</span>.
+            
+            <p class="text-xl md:text-3xl font-medium mt-4 mb-16 text-gray-300">
+                Passo a passo para se organizar politicamente.
             </p>
-            <div class="font-hand text-4xl md:text-5xl text-brand-yellow transform -rotate-3 mt-8">
-                Política também é sobre gente. ✨
-            </div>
-            
-            <div class="mt-16 animate-bounce text-gray-500">
-                <i class="fa-solid fa-arrow-down text-3xl"></i>
-            </div>
-        </div>
-        <!-- Decorative bg elements -->
-        <div class="absolute top-10 left-10 w-32 h-32 bg-brand-pink rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-        <div class="absolute bottom-10 right-10 w-40 h-40 bg-brand-yellow rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-    </section>
 
-    <!-- 2. Entenda o que quer fazer -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-yellow flex flex-col justify-center p-6 relative">
-        <div class="max-w-5xl mx-auto w-full">
-            <h2 class="font-display text-4xl md:text-6xl font-black mb-12 leading-tight">
-                Primeiro: <br>
-                <span class="tape-pink text-white text-3xl md:text-5xl mt-2">entenda o que você quer fazer</span>
-            </h2>
-            
-            <p class="text-lg md:text-2xl font-medium mb-8">Não existe uma única forma de participar. O importante é alinhar com o que faz sentido pra você.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-semibold">
-                <div class="bg-white/50 p-6 rounded-2xl hover:bg-white transition-colors flex items-center gap-4">
-                    <i class="fa-solid fa-bullhorn text-brand-pink text-2xl"></i> Atuar em campanhas
+            <div class="mt-8 transform -rotate-3 inline-block">
+                <div class="font-hand text-3xl md:text-5xl text-brand-dark bg-brand-yellow px-6 py-3 rounded-xl shadow-lg border-2 border-brand-yellow">
+                    A política se faz de forma cotidiana!
                 </div>
-                <div class="bg-white/50 p-6 rounded-2xl hover:bg-white transition-colors flex items-center gap-4">
-                    <i class="fa-solid fa-users text-brand-green text-2xl"></i> Movimentos sociais
-                </div>
-                <div class="bg-white/50 p-6 rounded-2xl hover:bg-white transition-colors flex items-center gap-4">
-                    <i class="fa-solid fa-house-chimney text-brand-pink text-2xl"></i> Atuar no bairro/comunidade
-                </div>
-                <div class="bg-white/50 p-6 rounded-2xl hover:bg-white transition-colors flex items-center gap-4">
-                    <i class="fa-solid fa-file-contract text-brand-green text-2xl"></i> Acompanhar políticas públicas
-                </div>
-                <div class="bg-white/50 p-6 rounded-2xl hover:bg-white transition-colors flex items-center gap-4">
-                    <i class="fa-solid fa-flag text-brand-pink text-2xl"></i> Militar em partido
-                </div>
-                <div class="bg-white/50 p-6 rounded-2xl hover:bg-white transition-colors flex items-center gap-4">
-                    <i class="fa-solid fa-fist-raised text-brand-green text-2xl"></i> Sindicato ou Coletivo
-                </div>
-            </div>
-
-            <div class="font-hand text-3xl text-brand-dark transform rotate-2 text-right mt-8">
-                O importante é saber o que te move!
             </div>
         </div>
     </section>
 
-    <!-- 3. Procure o que já existe -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-green text-white flex flex-col justify-center p-6 relative">
-        <div class="max-w-5xl mx-auto w-full">
-            <h2 class="font-display text-4xl md:text-6xl font-black mb-8 leading-tight">
-                Depois, procure <br>
-                <span class="tape-green mt-2 text-3xl md:text-5xl">o que já existe na sua cidade</span>
+    <!-- Seção 2 -->
+    <section class="min-h-screen flex items-center py-20 bg-brand-light text-brand-dark">
+        <div class="max-w-5xl mx-auto w-full px-6 fade-up">
+            <h2 class="text-4xl md:text-6xl font-bold mb-8 text-brand-dark">
+                Primeiro: <span class="highlight-marker highlight-coral">entenda o que você pode fazer</span>
             </h2>
             
-            <p class="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl">Muitas organizações já estão atuando no seu território. Não precisa inventar a roda do zero.</p>
+            <p class="text-lg md:text-2xl font-medium mb-12 text-gray-700 max-w-3xl">
+                Não existe uma única forma de participar. E é possível se organizar politicamente nos espaços que você já ocupa:
+            </p>
             
-            <ul class="space-y-4 text-lg md:text-xl font-medium columns-1 md:columns-2 gap-8">
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Diretórios municipais</li>
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Juventudes partidárias</li>
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Movimentos sociais</li>
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Coletivos locais</li>
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Sindicatos</li>
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Associações comunitárias</li>
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Organizações estudantis</li>
-                <li class="flex items-start gap-3 mb-4"><i class="fa-solid fa-check text-brand-yellow mt-1"></i> Organizações temáticas</li>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-coral">
+                    <div class="bg-brand-coral/10 text-brand-coral p-3 rounded-full shrink-0">
+                        <i class="fa-solid fa-graduation-cap text-xl"></i>
+                    </div>
+                    <span class="text-lg font-semibold mt-2">Movimento estudantil na escola ou na universidade</span>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-yellow">
+                    <div class="bg-brand-yellow/20 text-brand-yellow p-3 rounded-full shrink-0">
+                        <i class="fa-solid fa-rainbow text-xl"></i>
+                    </div>
+                    <span class="text-lg font-semibold mt-2">Movimento de mulheres, negros e negras, LGBTQIAP+</span>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-dark">
+                    <div class="bg-brand-dark/10 text-brand-dark p-3 rounded-full shrink-0">
+                        <i class="fa-solid fa-house-chimney-user text-xl"></i>
+                    </div>
+                    <span class="text-lg font-semibold mt-2">Organização de bairros e comunidade</span>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-coral">
+                    <div class="bg-brand-coral/10 text-brand-coral p-3 rounded-full shrink-0">
+                        <i class="fa-solid fa-drum text-xl"></i>
+                    </div>
+                    <span class="text-lg font-semibold mt-2">Organização em terreiros, quilombos e territórios</span>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <span class="tape font-hand text-3xl md:text-5xl text-brand-dark">
+                    O importante é saber o que te move!
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção 3 -->
+    <section class="min-h-screen flex items-center py-20 bg-brand-yellow text-brand-dark">
+        <div class="max-w-4xl mx-auto w-full px-6 fade-up">
+            <h2 class="text-4xl md:text-6xl font-bold mb-8">
+                Depois, procure o que <span class="text-white highlight-marker">já existe na sua cidade</span>
+            </h2>
+            
+            <p class="text-xl md:text-2xl font-medium mb-12">
+                Muitas organizações já estão atuando no seu território. Veja algumas:
+            </p>
+            
+            <ul class="space-y-6">
+                <li class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex items-center gap-4 text-xl md:text-2xl font-semibold">
+                    <div class="text-brand-coral"><i class="fa-solid fa-arrow-right"></i></div>
+                    Diretórios municipais de partidos
+                </li>
+                <li class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex items-center gap-4 text-xl md:text-2xl font-semibold">
+                    <div class="text-brand-coral"><i class="fa-solid fa-arrow-right"></i></div>
+                    Movimentos sociais e coletivos locais
+                </li>
+                <li class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex items-center gap-4 text-xl md:text-2xl font-semibold">
+                    <div class="text-brand-coral"><i class="fa-solid fa-arrow-right"></i></div>
+                    Sindicatos, diretórios e centros acadêmicos
+                </li>
             </ul>
-
-            <div class="absolute bottom-12 right-12 font-hand text-4xl text-brand-yellow transform -rotate-6">
-                Pesquise, pergunte, se informe!
-            </div>
         </div>
     </section>
 
-    <!-- 4. Confira se é ativa -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-purple_light flex flex-col justify-center p-6 relative">
-        <div class="max-w-4xl mx-auto w-full">
-            <h2 class="font-display text-4xl md:text-6xl font-black mb-8 leading-tight">
-                <span class="tape-pink text-3xl md:text-5xl">Confira se a organização</span> <br>
-                é realmente ativa
+    <!-- Seção 4 -->
+    <section class="min-h-screen flex items-center py-20 bg-brand-light text-brand-dark">
+        <div class="max-w-4xl mx-auto w-full px-6 fade-up text-center">
+            <h2 class="text-4xl md:text-6xl font-bold mb-6">
+                Entenda <span class="highlight-marker">como funciona</span> e <span class="highlight-marker">onde atuam</span>
             </h2>
             
-            <p class="text-lg md:text-xl mb-8">Ter CNPJ, diretório ou filiação não significa que existe militância local de verdade. Muitas vezes a estrutura existe, mas não há atividade.</p>
+            <p class="font-hand text-4xl text-brand-coral mb-12">
+                Como descobrir?
+            </p>
             
-            <div class="bg-white p-8 rounded-3xl shadow-xl border-2 border-brand-pink/20 relative">
-                <h3 class="font-display text-2xl font-bold mb-6 text-brand-pink">Como descobrir?</h3>
-                <ul class="space-y-5 text-lg font-medium">
-                    <li class="flex items-center gap-4">
-                        <span class="w-10 h-10 rounded-full bg-brand-purple_light flex justify-center items-center text-brand-pink"><i class="fa-brands fa-instagram"></i></span>
-                        Veja as redes sociais e o site
-                    </li>
-                    <li class="flex items-center gap-4">
-                        <span class="w-10 h-10 rounded-full bg-brand-purple_light flex justify-center items-center text-brand-pink"><i class="fa-regular fa-calendar-check"></i></span>
-                        Observe se há eventos, reuniões ou mobilizações
-                    </li>
-                    <li class="flex items-center gap-4">
-                        <span class="w-10 h-10 rounded-full bg-brand-purple_light flex justify-center items-center text-brand-pink"><i class="fa-regular fa-comments"></i></span>
-                        Converse com pessoas que já participam
-                    </li>
-                </ul>
-                
-                <div class="absolute -bottom-6 -right-6 bg-brand-yellow text-brand-dark font-hand text-2xl px-6 py-4 rounded-2xl transform rotate-3 shadow-lg border-2 border-brand-dark">
-                    Organização de verdade se vê na prática!
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 5. Vá a uma atividade -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-yellow_light flex flex-col justify-center p-6 relative">
-        <div class="max-w-5xl mx-auto w-full text-center">
-            <h2 class="font-display text-4xl md:text-6xl font-black mb-8 leading-tight">
-                <span class="tape-yellow text-3xl md:text-5xl mb-2">Vá a uma atividade</span> <br>
-                antes de se comprometer
-            </h2>
-            
-            <p class="text-xl max-w-2xl mx-auto mb-12">É na prática que você descobre se aquela organização combina com o que você procura. Participe de:</p>
-            
-            <div class="flex flex-wrap justify-center gap-4 md:gap-8">
-                <div class="bg-white w-40 h-40 rounded-full flex flex-col justify-center items-center shadow-lg border-4 border-brand-yellow">
-                    <i class="fa-solid fa-door-open text-3xl text-brand-pink mb-2"></i>
-                    <span class="font-bold">Reuniões<br>abertas</span>
-                </div>
-                <div class="bg-white w-40 h-40 rounded-full flex flex-col justify-center items-center shadow-lg border-4 border-brand-yellow">
-                    <i class="fa-solid fa-microphone-lines text-3xl text-brand-pink mb-2"></i>
-                    <span class="font-bold">Plenárias</span>
-                </div>
-                <div class="bg-white w-40 h-40 rounded-full flex flex-col justify-center items-center shadow-lg border-4 border-brand-yellow">
-                    <i class="fa-solid fa-people-arrows text-3xl text-brand-pink mb-2"></i>
-                    <span class="font-bold">Debates</span>
-                </div>
-                <div class="bg-white w-40 h-40 rounded-full flex flex-col justify-center items-center shadow-lg border-4 border-brand-yellow">
-                    <i class="fa-solid fa-hand-holding-hand text-3xl text-brand-pink mb-2"></i>
-                    <span class="font-bold">Mutirões</span>
-                </div>
-            </div>
-
-            <div class="font-hand text-3xl md:text-4xl text-brand-dark mt-12">
-                É na convivência que a gente sente se é o nosso lugar.
-            </div>
-        </div>
-    </section>
-
-    <!-- 6. Só depois pense em filiação -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-pink_light flex flex-col justify-center p-6 relative">
-        <div class="max-w-4xl mx-auto w-full text-center">
-            <h2 class="font-display text-4xl md:text-6xl font-black mb-8 leading-tight">
-                <span class="tape-pink text-white text-3xl md:text-5xl">Só depois pense</span> <br>
-                em filiação, se fizer sentido.
-            </h2>
-            
-            <p class="text-xl mb-12">Filiação partidária pode ser uma ferramenta importante. Mas, sozinha, ela não é organização política.</p>
-            
-            <div class="bg-brand-pink text-white p-8 md:p-12 rounded-[3rem] transform -rotate-1 shadow-2xl relative">
-                <h3 class="font-hand text-4xl md:text-6xl mb-6">O que importa é com quem e onde você vai lutar.</h3>
-                <p class="font-semibold text-lg md:text-xl">Antes de se filiar, entenda como aquela organização atua na sua cidade e se ela tem projetos e ações que fazem sentido para você.</p>
-                <i class="fa-solid fa-arrow-turn-down absolute -right-4 -bottom-8 text-6xl text-brand-dark transform rotate-12"></i>
-            </div>
-        </div>
-    </section>
-
-    <!-- 7. Resumindo -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-dark text-white flex flex-col justify-center p-6 relative">
-        <div class="max-w-3xl mx-auto w-full">
-            <div class="tape-green text-lg font-bold mb-6">Resumindo:</div>
-            
-            <ol class="space-y-6 text-xl md:text-2xl font-bold">
-                <li class="flex items-center gap-6">
-                    <span class="w-12 h-12 flex-shrink-0 bg-brand-yellow text-brand-dark rounded-full flex justify-center items-center font-black text-2xl">1</span>
-                    Entenda o que você quer fazer.
-                </li>
-                <li class="flex items-center gap-6">
-                    <span class="w-12 h-12 flex-shrink-0 bg-brand-green text-white rounded-full flex justify-center items-center font-black text-2xl">2</span>
-                    Busque o que já existe na sua cidade.
-                </li>
-                <li class="flex items-center gap-6">
-                    <span class="w-12 h-12 flex-shrink-0 bg-brand-purple_light text-brand-dark rounded-full flex justify-center items-center font-black text-2xl">3</span>
-                    Verifique se a organização é ativa.
-                </li>
-                <li class="flex items-center gap-6">
-                    <span class="w-12 h-12 flex-shrink-0 bg-brand-yellow_light text-brand-dark rounded-full flex justify-center items-center font-black text-2xl">4</span>
-                    Participe de uma atividade.
-                </li>
-                <li class="flex items-center gap-6">
-                    <span class="w-12 h-12 flex-shrink-0 bg-brand-pink text-white rounded-full flex justify-center items-center font-black text-2xl">5</span>
-                    Só depois pense em filiação.
-                </li>
-            </ol>
-
-            <div class="mt-16 text-center border-t-2 border-gray-800 pt-10">
-                <h2 class="font-display text-3xl md:text-5xl font-black mb-4">A política é feita de pessoas.</h2>
-                <div class="font-hand text-3xl text-brand-yellow">Informação + Participação = Mais poder para transformar.</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 8. Mapa do Brasil (Última Seção) -->
-    <section class="section-snap min-h-[100vh] w-full bg-brand-dark text-white flex flex-col justify-center p-6 relative py-20">
-        <div class="max-w-6xl mx-auto w-full text-center mb-10">
-            <h2 class="font-display text-4xl md:text-5xl font-black mb-4">
-                Onde estamos <span class="tape-pink">construindo?</span>
-            </h2>
-            <p class="text-gray-400 text-lg">Clique nos pontos pulsantes no mapa para conhecer nossos núcleos ou crie um novo na sua cidade.</p>
-        </div>
-
-        <div class="flex flex-col lg:flex-row gap-10 items-center justify-center max-w-6xl mx-auto w-full">
-            
-            <!-- Mapa Container -->
-            <div class="map-container flex-1 bg-gray-900/50 rounded-3xl p-4 border border-gray-800 shadow-2xl overflow-hidden relative">
-                <!-- SVG Silhueta do Brasil Simplificada -->
-                <svg viewBox="0 0 1000 1000" class="w-full h-full text-gray-700/50 fill-current drop-shadow-xl" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M428.5,33.5c41.3,3,76.5,14,103.5,41c30,30,47.8,70.5,88.5,88.5c56.4,24.9,136.2,16.5,189.5,49.5 c52.6,32.6,65.8,99.9,64.5,160.5c-1,49.6-18.7,98-33,145.5c-16.1,53.4-17.7,112.5-49,158.5c-35.1,51.6-96.6,83-157.5,99.5 c-32.9,8.9-67.9,13.6-99.5,28.5c-39.7,18.7-72.2,50.7-111,70c-25,12.4-52.6,22-81,21c-30.8-1-58.1-15-84.5-29 c-24.8-13.1-47.5-29.4-71-44c-35.3-22.1-70.5-44.5-103-70c-35.1-27.6-67.1-59.5-94-94.5C64,624,44.7,585.1,28.5,543.5 C12.2,501.5,5.1,457.7,6.5,413.5c1.4-43,15.6-84.2,34-123.5c15.8-33.8,36.5-65.2,59-95c25.4-33.6,56.1-63.5,89.5-88.5 c31.1-23.2,65.5-42.5,101.5-57.5C334,31.1,381.7,30.1,428.5,33.5z" stroke="#333" stroke-width="2"/>
-                </svg>
-
-                <!-- Pins Container (Positioned absolutely over SVG) -->
-                <!-- Posições aproximadas baseadas no viewBox 1000x1000 do SVG abstrato -->
-                
-                <!-- Salvador (BA) -->
-                <div class="pin-wrapper group" style="left: 80%; top: 40%;" onclick="openCityModal('salvador')">
-                    <div class="pin-pulse"></div>
-                    <div class="pin-core"></div>
-                    <span class="absolute left-6 top-0 bg-brand-dark border border-gray-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Salvador, BA</span>
-                </div>
-
-                <!-- São Paulo (SP) -->
-                <div class="pin-wrapper group" style="left: 65%; top: 62%;" onclick="openCityModal('sp')">
-                    <div class="pin-pulse"></div>
-                    <div class="pin-core"></div>
-                    <span class="absolute left-6 top-0 bg-brand-dark border border-gray-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">São Paulo, SP</span>
-                </div>
-
-                <!-- Florianópolis (SC) -->
-                <div class="pin-wrapper group" style="left: 60%; top: 72%;" onclick="openCityModal('floripa')">
-                    <div class="pin-pulse"></div>
-                    <div class="pin-core"></div>
-                    <span class="absolute left-6 top-0 bg-brand-dark border border-gray-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Florianópolis, SC</span>
-                </div>
-
-                <!-- Porto Alegre (RS) -->
-                <div class="pin-wrapper group" style="left: 55%; top: 80%;" onclick="openCityModal('poa')">
-                    <div class="pin-pulse"></div>
-                    <div class="pin-core"></div>
-                    <span class="absolute left-6 top-0 bg-brand-dark border border-gray-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Porto Alegre, RS</span>
-                </div>
-
-                <!-- Alvorada (RS) -->
-                <div class="pin-wrapper group" style="left: 57%; top: 78%;" onclick="openCityModal('alvorada')">
-                    <div class="pin-pulse"></div>
-                    <div class="pin-core"></div>
-                    <span class="absolute left-6 top-0 bg-brand-dark border border-gray-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Alvorada, RS</span>
-                </div>
-
-                <!-- Santa Maria (RS) -->
-                <div class="pin-wrapper group" style="left: 48%; top: 78%;" onclick="openCityModal('santamaria')">
-                    <div class="pin-pulse"></div>
-                    <div class="pin-core"></div>
-                    <span class="absolute right-6 top-0 bg-brand-dark border border-gray-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Santa Maria, RS</span>
-                </div>
-
-                <!-- Pelotas (RS) -->
-                <div class="pin-wrapper group" style="left: 52%; top: 86%;" onclick="openCityModal('pelotas')">
-                    <div class="pin-pulse"></div>
-                    <div class="pin-core"></div>
-                    <span class="absolute left-6 top-0 bg-brand-dark border border-gray-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Pelotas, RS</span>
-                </div>
-            </div>
-
-            <!-- Painel / Modal Lateral -->
-            <div class="w-full lg:w-[400px] flex flex-col gap-6">
-                <!-- Info Panel -->
-                <div id="city-panel" class="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl relative hidden min-h-[300px]">
-                    <button onclick="closeCityModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                    
-                    <div class="tape-pink text-xs font-bold mb-4 inline-block" id="panel-state">ESTADO</div>
-                    <h3 class="font-display text-3xl font-black mb-2 text-white" id="panel-city">Nome da Cidade</h3>
-                    
-                    <div class="space-y-4 mt-6 text-sm text-gray-300">
-                        <p><strong class="text-white"><i class="fa-regular fa-calendar-check text-brand-yellow w-5"></i> Reuniões:</strong> <span id="panel-reuniao">Quartas, 19h</span></p>
-                        <p><strong class="text-white"><i class="fa-solid fa-bullseye text-brand-yellow w-5"></i> Pautas locais:</strong> <span id="panel-pauta">Moradia, transporte público, saneamento.</span></p>
-                        
-                        <div class="flex gap-4 pt-4 border-t border-gray-800">
-                            <a href="#" class="text-brand-pink hover:text-white transition flex items-center gap-2">
-                                <i class="fa-brands fa-whatsapp text-xl"></i> WhatsApp
-                            </a>
-                            <a href="#" class="text-brand-pink hover:text-white transition flex items-center gap-2">
-                                <i class="fa-brands fa-instagram text-xl"></i> Instagram
-                            </a>
-                        </div>
+            <div class="flex flex-col md:flex-row justify-center gap-8">
+                <div class="bg-white p-8 rounded-3xl shadow-soft flex-1 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-brand-dark text-white rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="fa-solid fa-mobile-screen"></i>
                     </div>
-                    
-                    <button class="w-full mt-8 bg-brand-pink text-white font-bold py-4 rounded-xl hover:bg-pink-500 transition-colors shadow-lg shadow-pink-500/30">
-                        Junte-se a nós
-                    </button>
+                    <p class="text-lg font-semibold">Veja as redes sociais e o site</p>
                 </div>
                 
-                <!-- Initial State / Call to Action -->
-                <div id="initial-panel" class="bg-gray-900/50 border border-gray-800 rounded-3xl p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
-                    <i class="fa-solid fa-location-dot text-4xl text-gray-600 mb-4"></i>
-                    <p class="text-gray-400 font-medium">Selecione uma cidade no mapa para ver os detalhes do núcleo ativo.</p>
+                <div class="bg-white p-8 rounded-3xl shadow-soft flex-1 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-brand-coral text-white rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                    <p class="text-lg font-semibold">Observe se há eventos e reuniões na sua cidade</p>
                 </div>
+                
+                <div class="bg-white p-8 rounded-3xl shadow-soft flex-1 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-brand-yellow text-brand-dark rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <p class="text-lg font-semibold">Converse com pessoas que já participam</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                <!-- Botão Criar Núcleo -->
-                <div class="bg-brand-yellow rounded-3xl p-8 text-center text-brand-dark relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer" onclick="openCreateModal()">
-                    <h3 class="font-display text-2xl font-black mb-2 relative z-10">Sua cidade não está aí?</h3>
-                    <p class="font-medium text-sm mb-6 relative z-10">Nós ajudamos você a iniciar um núcleo no seu território.</p>
-                    <button class="bg-brand-dark text-white font-bold py-3 px-6 rounded-full w-full relative z-10 group-hover:bg-black transition-colors">
-                        Criar um novo núcleo
-                    </button>
-                    <div class="absolute -right-4 -bottom-4 font-hand text-6xl text-black/10 transform rotate-12 z-0">
-                        Bora!
+    <!-- Seção 5 (Mapa Interativo) -->
+    <section class="min-h-screen flex items-center py-20 bg-brand-dark text-brand-light bg-dark-map">
+        <div class="max-w-6xl mx-auto w-full px-6 flex flex-col h-full fade-up">
+            
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">
+                    Gostou do guia e gostaria de nos conhecer?
+                </h2>
+                <p class="font-hand text-3xl md:text-4xl text-brand-yellow">
+                    Organize sua revolta, conheça o Alicerce!
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-center bg-[#232536] rounded-3xl p-6 shadow-xl border border-white/5">
+                
+                <!-- SVG Map Container -->
+                <div class="w-full lg:w-1/2 flex items-center justify-center relative">
+                    <div id="map-container" class="w-full h-80 lg:h-[500px] flex justify-center items-center">
+                        <!-- D3 SVG Here -->
                     </div>
                 </div>
+
+                <!-- Cards Container -->
+                <div class="w-full lg:w-1/2 flex flex-col gap-4 overflow-y-auto custom-scroll pr-4 max-h-[500px]" id="cards-container">
+                    <!-- Gerado via JS -->
+                </div>
+
             </div>
         </div>
     </section>
 
-    <!-- Modal Criar Núcleo (Overlay) -->
-    <div id="create-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4 hidden opacity-0 transition-opacity">
-        <div class="bg-white text-brand-dark rounded-3xl p-8 max-w-md w-full relative transform scale-95 transition-transform duration-300" id="create-modal-content">
-            <button onclick="closeCreateModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-dark transition">
-                <i class="fa-solid fa-xmark text-xl"></i>
+    <!-- Seção 6 -->
+    <section class="py-32 bg-brand-coral text-white text-center">
+        <div class="max-w-3xl mx-auto px-6 fade-up">
+            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-map-location-dot text-4xl"></i>
+            </div>
+            
+            <h2 class="text-4xl md:text-6xl font-bold mb-6">
+                Sua cidade não está no mapa?
+            </h2>
+            
+            <p class="text-xl md:text-2xl font-medium mb-12 text-white/90">
+                Se você tem vontade de organizar pessoas no seu território, nós podemos ajudar.
+            </p>
+            
+            <button class="bg-brand-yellow text-brand-dark font-bold text-xl px-10 py-5 rounded-full hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                Quero me organizar!
             </button>
-            <h3 class="font-display text-2xl font-black mb-2">Iniciar um núcleo</h3>
-            <p class="text-sm text-gray-600 mb-6">Preencha seus dados para recebermos seu interesse. Nossa equipe de coordenação entrará em contato.</p>
-            
-            <form class="space-y-4" onsubmit="event.preventDefault(); alert('Interesse registrado! Em breve entraremos em contato.'); closeCreateModal();">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome Completo</label>
-                    <input type="text" required class="w-full bg-gray-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-pink">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cidade</label>
-                        <input type="text" required class="w-full bg-gray-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-pink">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Estado</label>
-                        <input type="text" required maxlength="2" class="w-full bg-gray-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-pink uppercase">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp</label>
-                    <input type="tel" required class="w-full bg-gray-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-pink">
-                </div>
-                <button type="submit" class="w-full bg-brand-pink text-white font-bold py-4 rounded-xl hover:bg-pink-500 transition-colors shadow-lg shadow-pink-500/30 mt-4">
-                    Enviar Solicitação
-                </button>
-            </form>
         </div>
-    </div>
+    </section>
 
-    <!-- Scripts da Página -->
     <script>
-        // Dados fictícios dos núcleos solicitados
-        const citiesData = {
-            salvador: {
-                nome: "Salvador",
-                estado: "BA",
-                reuniao: "Sábados, 15h - Pelourinho",
-                pauta: "Juventude negra, direito à cidade, cultura periférica e combate ao racismo."
-            },
-            sp: {
-                nome: "São Paulo",
-                estado: "SP",
-                reuniao: "Quintas-feiras, 19h - Sindicato dos Bancários",
-                pauta: "Transporte público tarifa zero, moradia popular e lutas sindicais."
-            },
-            floripa: {
-                nome: "Florianópolis",
-                estado: "SC",
-                reuniao: "Terças, 18h30 - Centro",
-                pauta: "Plano diretor participativo, preservação ambiental e acesso à praia."
-            },
-            poa: {
-                nome: "Porto Alegre",
-                estado: "RS",
-                reuniao: "Quartas, 19h - Centro Histórico",
-                pauta: "Defesa de serviços públicos, parques e assistência social no município."
-            },
-            alvorada: {
-                nome: "Alvorada",
-                estado: "RS",
-                reuniao: "Domingos, 10h - Associação de Moradores",
-                pauta: "Saneamento básico, pavimentação, cursinhos populares e solidariedade."
-            },
-            santamaria: {
-                nome: "Santa Maria",
-                estado: "RS",
-                reuniao: "Sextas, 17h - Praça Saldanha",
-                pauta: "Permanência estudantil na UFSM, transporte interbairros e cultura livre."
-            },
-            pelotas: {
-                nome: "Pelotas",
-                estado: "RS",
-                reuniao: "Segundas, 19h - Espaço Cultural",
-                pauta: "Patrimônio histórico, mobilização estudantil e apoio a trabalhadores informais."
-            }
-        };
+        // Intersection Observer para animações de fade-up
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
 
-        // Lógica de abertura do painel do núcleo
-        function openCityModal(cityId) {
-            const data = citiesData[cityId];
-            if(!data) return;
+        document.querySelectorAll('.fade-up').forEach((el) => {
+            observer.observe(el);
+        });
 
-            // Preenche os dados
-            document.getElementById('panel-city').textContent = data.nome;
-            document.getElementById('panel-state').textContent = data.estado;
-            document.getElementById('panel-reuniao').textContent = data.reuniao;
-            document.getElementById('panel-pauta').textContent = data.pauta;
+        // Dados das cidades
+        const cities = [
+            { name: "Porto Alegre, RS", coords: [-51.2177, -30.0346] },
+            { name: "Santa Maria, RS", coords: [-53.8069, -29.6842] },
+            { name: "Pelotas, RS", coords: [-52.3376, -31.7654] },
+            { name: "Alvorada, RS", coords: [-51.0700, -30.0044] },
+            { name: "Florianópolis, SC", coords: [-48.5480, -27.5954] },
+            { name: "Curitiba, PR", coords: [-49.2733, -25.4284] },
+            { name: "São Paulo, SP", coords: [-46.6333, -23.5505] },
+            { name: "Salvador, BA", coords: [-38.5014, -12.9714] }
+        ];
 
-            // Esconde estado inicial e mostra painel
-            document.getElementById('initial-panel').classList.add('hidden');
-            const panel = document.getElementById('city-panel');
-            panel.classList.remove('hidden');
-            
-            // Pequena animação de entrada
-            panel.classList.add('animate-pulse');
-            setTimeout(() => panel.classList.remove('animate-pulse'), 300);
-        }
+        // 1. Gerar os Cards HTML
+        const cardsContainer = document.getElementById('cards-container');
+        cities.forEach(city => {
+            const card = document.createElement('div');
+            card.className = "bg-brand-dark border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:border-brand-coral hover:bg-[#32344d] transition-colors group";
+            card.innerHTML = `
+                <div>
+                    <h3 class="text-xl font-bold text-brand-light group-hover:text-brand-yellow transition-colors">${city.name}</h3>
+                </div>
+                <button class="bg-brand-coral text-white text-sm font-semibold rounded-full px-5 py-2 hover:bg-brand-yellow hover:text-brand-dark transition-colors shadow-sm">
+                    Junte-se a nós
+                </button>
+            `;
+            cardsContainer.appendChild(card);
+        });
 
-        function closeCityModal() {
-            document.getElementById('city-panel').classList.add('hidden');
-            document.getElementById('initial-panel').classList.remove('hidden');
-        }
+        // 2. Lógica D3.js para o Mapa do Brasil
+        const width = 600;
+        const height = 600;
 
-        // Modal de criação de núcleo
-        const modal = document.getElementById('create-modal');
-        const modalContent = document.getElementById('create-modal-content');
+        const svg = d3.select("#map-container")
+            .append("svg")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("width", "100%")
+            .attr("height", "100%");
 
-        function openCreateModal() {
-            modal.classList.remove('hidden');
-            // Timeout pequeno para aplicar transição de opacidade/escala
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-            }, 10);
-        }
+        const projection = d3.geoMercator();
+        const path = d3.geoPath().projection(projection);
+        const geojsonUrl = 'https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson';
 
-        function closeCreateModal() {
-            modal.classList.add('opacity-0');
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
-            // Espera a transição acabar para esconder
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
+        d3.json(geojsonUrl).then(function(br) {
+            projection.fitSize([width, height], br);
+
+            svg.selectAll("path")
+                .data(br.features)
+                .enter().append("path")
+                .attr("d", path)
+                .attr("class", "state-path");
+
+            const pins = svg.selectAll(".pin")
+                .data(cities)
+                .enter()
+                .append("g")
+                .attr("class", "pin")
+                .attr("transform", d => {
+                    const coords = projection(d.coords);
+                    return `translate(${coords[0]}, ${coords[1]})`;
+                });
+
+            // Ícone de pin amigável (coral)
+            pins.append("path")
+                .attr("d", "M0,0 C2.5,-7.5 7,-12 7,-17 C7,-21 4,-24 0,-24 C-4,-24 -7,-21 -7,-17 C-7,-12 -2.5,-7.5 0,0 Z")
+                .attr("fill", "#ef476f")
+                .attr("stroke", "#ffffff")
+                .attr("stroke-width", 1.5)
+                .attr("transform", "scale(1.2)")
+                .style("filter", "drop-shadow(0px 3px 2px rgba(0,0,0,0.3))");
+                
+            pins.append("circle")
+                .attr("cx", 0)
+                .attr("cy", -20)
+                .attr("r", 2.5)
+                .attr("fill", "#ffffff");
+
+            // Texto (Nome da cidade oculto, aparece no hover)
+            pins.append("text")
+                .text(d => d.name)
+                .attr("x", 12)
+                .attr("y", -10)
+                .attr("fill", "#ffca28")
+                .attr("font-family", "Poppins, sans-serif")
+                .attr("font-size", "14px")
+                .attr("font-weight", "600")
+                .attr("opacity", 0)
+                .style("pointer-events", "none")
+                .style("text-shadow", "0px 2px 4px rgba(0,0,0,0.8)")
+                .attr("class", "transition-opacity duration-300")
+                .on("mouseover", function() { d3.select(this).attr("opacity", 1); })
+                .on("mouseout", function() { d3.select(this).attr("opacity", 0); });
+                
+            // Ativa o texto no hover do path também
+            pins.selectAll("path")
+                .on("mouseover", function(event, d) {
+                    d3.select(this.parentNode).select("text").attr("opacity", 1);
+                    d3.select(this).attr("fill", "#ffca28").attr("transform", "scale(1.4) translateY(-2px)").transition().duration(200);
+                })
+                .on("mouseout", function(event, d) {
+                    d3.select(this.parentNode).select("text").attr("opacity", 0);
+                    d3.select(this).attr("fill", "#ef476f").attr("transform", "scale(1.2)").transition().duration(200);
+                });
+                
+        }).catch(error => {
+            console.error("Erro ao carregar o mapa:", error);
+            document.getElementById('map-container').innerHTML = "<p class='text-brand-coral font-bold text-center'>Ocorreu um erro ao carregar o mapa.<br>Verifique sua conexão de rede.</p>";
+        });
     </script>
 </body>
 </html>
